@@ -33,6 +33,13 @@ def embeddings(texts, **kw):
 	model = kw.get('model','text-embedding-ada-002')
 	llm = openai.model(model)
 	resp = llm.embed_many(texts, **kw)
+	# Convert usage object to dictionary if needed
+	if hasattr(resp['usage'], 'prompt_tokens'):
+		resp['usage'] = {
+			'prompt_tokens': resp['usage'].prompt_tokens,
+			'completion_tokens': resp['usage'].completion_tokens,
+			'total_tokens': resp['usage'].total_tokens
+		}
 	resp['model'] = model
 	return resp
 
@@ -42,7 +49,17 @@ def get_token_count(text):
 
 def stats_callback(out, resp, self):
 	model = self.config['model']
-	usage = resp['usage']
+	# Handle both dictionary-style and attribute-style responses
+	usage = resp.usage if hasattr(resp, 'usage') else resp['usage']
+
+	# Convert usage to dictionary if it's an object
+	if hasattr(usage, 'prompt_tokens'):
+		usage = {
+			'prompt_tokens': usage.prompt_tokens,
+			'total_tokens': usage.total_tokens,
+			'completion_tokens': getattr(usage, 'completion_tokens', 0)
+		}
+
 	usage['call_cnt'] = 1
 	if 'text' in out:
 		usage['completion_chars'] = len(out['text'])
@@ -53,6 +70,7 @@ def stats_callback(out, resp, self):
 	if 'rtt' in out:
 		usage['rtt'] = out['rtt']
 		usage['rtt_cnt'] = 1
+
 	usage_stats.incr(f'usage:v4:[date]:[user]', {f'{k}:{model}':v for k,v in usage.items()})
 	usage_stats.incr(f'hourly:v4:[date]',       {f'{k}:{model}:[hour]':v for k,v in usage.items()})
 	#print('STATS_CALLBACK', usage, flush=True) # XXX
