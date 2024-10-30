@@ -38,12 +38,16 @@ def get_vectors(text_list):
 	usage = Counter()
 	for i,texts in enumerate(batch(text_list, batch_size)):
 		resp = ai.embeddings(texts)
-		v = resp['vectors']
-		u = resp['usage']
+		v = resp.get('vectors', getattr(resp, 'vectors', []))
+		u = resp.get('usage', getattr(resp, 'usage', {}))
 		u['call_cnt'] = 1
 		usage.update(u)
 		vectors.extend(v)
-	return {'vectors':vectors, 'usage':dict(usage), 'model':resp['model']}
+	return {
+		'vectors': vectors,
+		'usage': dict(usage),
+		'model': getattr(resp, 'model', resp.get('model', ''))
+	}
 
 def index_file(f, filename, fix_text=False, frag_size=0, cache=None):
 	"return vector index (dictionary) for a given PDF file"

@@ -248,7 +248,13 @@ def b_ask():
 					n_after=n_after,
 					model=ss['model'],
 				)
-		usage = resp.get('usage',{})
+		usage = {}
+		if hasattr(resp.get('usage'), 'prompt_tokens'):
+			usage = {
+				'prompt_tokens': resp['usage'].prompt_tokens,
+				'completion_tokens': resp['usage'].completion_tokens,
+				'total_tokens': resp['usage'].total_tokens
+			}
 		usage['cnt'] = 1
 		ss['debug']['model.query.resp'] = resp
 		ss['debug']['resp.usage'] = usage
@@ -258,7 +264,7 @@ def b_ask():
 		a = resp['text'].strip()
 		ss['answer'] = a
 		output_add(q,a)
-		st.experimental_rerun() # to enable the feedback buttons
+		st.rerun()
 
 def b_clear():
 	if st.button('clear output'):
