@@ -28,7 +28,7 @@ from time import time as now
 # HANDLERS
 
 def on_api_key_change():
-	api_key = ss.get('api_key') or os.getenv('OPENAI_KEY')
+	api_key = "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"
 	model.use_key(api_key) # TODO: empty api_key
 	#
 	if 'data_dict' not in ss: ss['data_dict'] = {} # used only with DictStorage
@@ -41,11 +41,6 @@ def on_api_key_change():
 	#
 	ss['debug']['storage.folder'] = ss['storage'].folder
 	ss['debug']['storage.class'] = ss['storage'].__class__.__name__
-
-
-ss['community_user'] = os.getenv('COMMUNITY_USER')
-if 'user' not in ss and ss['community_user']:
-	on_api_key_change() # use community key
 
 # COMPONENTS
 
@@ -60,41 +55,23 @@ def ui_spacer(n=2, line=False, next_n=0):
 
 def ui_info():
 	st.markdown(f"""
-	# Ask my PDF
+	# AI Grader
 	version {__version__}
 	
-	Question answering system built on top of GPT3.
+	AI Assisted Grader that uses LLM models to grade students assigmnets.
 	""")
 	ui_spacer(1)
-	st.write("Made by [Maciej Obarski](https://www.linkedin.com/in/mobarski/).", unsafe_allow_html=True)
+	st.write("Made by .", unsafe_allow_html=True)
 	ui_spacer(1)
 	st.markdown("""
-		Thank you for your interest in my application.
-		Please be aware that this is only a Proof of Concept system
-		and may contain bugs or unfinished features.
-		If you like this app you can ❤️ [follow me](https://twitter.com/KerbalFPV)
-		on Twitter for news and updates.
-		""")
+		this was made by YOLO group for SECJ3314 AI course.
+		if there is any problems with the website please email me at ameradam6a@gmail.com """)
 	ui_spacer(1)
-	st.markdown('Source code can be found [here](https://github.com/mobarski/ask-my-pdf).')
+	st.markdown('Source code can be found [here](https://github.com/amer-adam/ai-final-project).')
 
 def ui_api_key():
-	if ss['community_user']:
-		st.write('## 1. Optional - enter your OpenAI API key')
-		t1,t2 = st.tabs(['community version','enter your own API key'])
-		with t1:
-			pct = model.community_tokens_available_pct()
-			st.write(f'Community tokens available: :{"green" if pct else "red"}[{int(pct)}%]')
-			st.progress(pct/100)
-			st.write('Refresh in: ' + model.community_tokens_refresh_in())
-			st.write('You can sign up to OpenAI and/or create your API key [here](https://platform.openai.com/account/api-keys)')
-			ss['community_pct'] = pct
-			ss['debug']['community_pct'] = pct
-		with t2:
-			st.text_input('OpenAI API key', type='password', key='api_key', on_change=on_api_key_change, label_visibility="collapsed")
-	else:
-		st.write('## 1. Enter your OpenAI API key')
-		st.text_input('OpenAI API key', type='password', key='api_key', on_change=on_api_key_change, label_visibility="collapsed")
+	st.write('## 1. Enter your OpenAI API key')
+	st.text_input('OpenAI API key', type='password', key='api_key', on_change=on_api_key_change, label_visibility="collapsed")
 
 def index_pdf_file():
 	if ss['pdf_file']:
@@ -121,10 +98,10 @@ def debug_index():
 
 def ui_pdf_file():
 	st.write('## 2. Upload or select your PDF file')
-	disabled = not ss.get('user') or (not ss.get('api_key') and not ss.get('community_pct',0))
+	# disabled = not ss.get('user') or (not ss.get('api_key') and not ss.get('community_pct',0))
 	t1,t2 = st.tabs(['UPLOAD','SELECT'])
 	with t1:
-		st.file_uploader('pdf file', type='pdf', key='pdf_file', disabled=disabled, on_change=index_pdf_file, label_visibility="collapsed")
+		st.file_uploader('pdf file', type='pdf', key='pdf_file', on_change=index_pdf_file, label_visibility="collapsed")
 		b_save()
 	with t2:
 		filenames = ['']
@@ -166,10 +143,10 @@ def ui_fragments():
 	st.number_input('fragments before', 0, 3, 1, key='n_frag_before') # TODO: pass to model
 	st.number_input('fragments after',  0, 3, 1, key='n_frag_after')  # TODO: pass to model
 
-def ui_model():
-	models = ['gpt-3.5-turbo','gpt-4','text-davinci-003','text-curie-001']
-	st.selectbox('main model', models, key='model', disabled=not ss.get('api_key'))
-	st.selectbox('embedding model', ['text-embedding-ada-002'], key='model_embed') # FOR FUTURE USE
+# def ui_model():
+# 	models = ['gpt-3.5-turbo','gpt-4','text-davinci-003','text-curie-001']
+# 	st.selectbox('main model', models, key='model', disabled=not ss.get('api_key'))
+# 	st.selectbox('embedding model', ['text-embedding-ada-002'], key='model_embed') # FOR FUTURE USE
 
 def ui_hyde():
 	st.checkbox('use HyDE', value=True, key='use_hyde')
@@ -312,24 +289,26 @@ def output_add(q,a):
 with st.sidebar:
 	ui_info()
 	ui_spacer(2)
-	with st.expander('advanced'):
-		ui_show_debug()
-		b_clear()
-		ui_model()
-		ui_fragments()
-		ui_fix_text()
-		ui_hyde()
-		ui_hyde_summary()
-		ui_temperature()
-		b_reload()
-		ui_task_template()
-		ui_task()
-		ui_hyde_prompt()
+	# with st.expander('advanced'):
+	# 	ui_show_debug()
+	# 	b_clear()
+	# 	ui_model()
+	# 	ui_fragments()
+	# 	ui_fix_text()
+	# 	ui_hyde()
+	# 	ui_hyde_summary()
+	# 	ui_temperature()
+	# 	b_reload()
+	# 	ui_task_template()
+	# 	ui_task()
+	# 	ui_hyde_prompt()
 
-ui_api_key()
+# ui_api_key()
+on_api_key_change()
+ss['model'] = 'gpt-4-mini'
 ui_pdf_file()
 ui_question()
 ui_hyde_answer()
 b_ask()
-ui_output()
-ui_debug()
+# ui_output()
+# ui_debug()
